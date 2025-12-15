@@ -18,23 +18,18 @@ func (app *appilication)mount() http.Handler  {
 		w.Write([]byte("root."))
 	})
 
-	 return  r
+	return  r
 }
 
 
-func (app appilication)run(h http.Handler)  {
+func (app appilication)run(h http.Handler) error {
 	srv := &http.Server{
 		Addr: app.config.addr,
 		Handler: h,
 	}
     
-	
-	err := srv.ListenAndServe()
-
-	if err != nil{
-       log.Fatalf("Error with serving %v" , err)
-	   return
-	}
+    log.Fatalf("Server started listening on port:%v",app.config.addr)
+    return srv.ListenAndServe()
 }
 
 type appilication struct{
