@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"log/slog"
 	"os"
 
@@ -11,27 +10,32 @@ import (
 
 func main()  {
     env.LoadEnv()
-    port , dbUrl := env.GetEnv()
+    port:= env.GetEnv("PORT")
+	dbUrl := env.GetEnv("DB_URL")
+
 	cfg := config{
 		addr:port,
 		db: dbConfig{
 			dsn:dbUrl,
 		},
 	}
+	logger :=slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
+	_,err := utils.ConnectDb(cfg.db.dsn)
+	if err != nil {
+		slog.Error("Failed to connect the db","error",err)
+		os.Exit(1)
+	}
+
+    logger.Info("DB connected")
+
 	app := appilication{
 		config: cfg,
 	}
 	 
-	_,err := utils.ConnectDb(app.config.db.dsn)
-	if err != nil {
-	   	log.Fatalf ("Failed to connect the db %v",err)
-		os.Exit(1)
-	}
-	println("Connected")
-	logger :=slog.New(slog.NewJSONHandler(os.Stdout, nil))
-    slog.SetDefault(logger)
     if err := app.run(app.mount()); err != nil{
-		log.Fatalf ("Failed to start the server %v",err)
+		slog.Error("Failed to start the server","error",err)
 		os.Exit(1)
 	}
 

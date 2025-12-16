@@ -15,8 +15,6 @@ func LoadEnv()  {
 	}
 }
 
-func GetEnv() (string,string) {
-	 port := os.Getenv("PORT")
-	 db_url := os.Getenv("DB_URL")
-	 return port , db_url
+func GetEnv(key string) string {
+	 return os.Getenv(key)
 }

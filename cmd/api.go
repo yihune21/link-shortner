@@ -21,10 +21,9 @@ func (app *appilication)mount() http.Handler  {
 	return  r
 }
 
-
 func (app appilication)run(h http.Handler) error {
 	srv := &http.Server{
-		Addr: app.config.addr,
+		Addr:app.config.addr,
 		Handler: h,
 	}
     

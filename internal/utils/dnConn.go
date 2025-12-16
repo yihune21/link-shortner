@@ -13,6 +13,7 @@ func ConnectDb(db_url string) (*database.Queries, error ) {
 	if err != nil {
 		return nil, errors.New("Can't connect")
 	}
+	
 	db_conn := database.New(conn)
     return db_conn , nil
 }
