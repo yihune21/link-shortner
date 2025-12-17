@@ -22,7 +22,7 @@ func main()  {
 	logger :=slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	_,err := utils.ConnectDb(cfg.db.dsn)
+	dbConn,err := utils.ConnectDb(cfg.db.dsn)
 	if err != nil {
 		slog.Error("Failed to connect the db","error",err)
 		os.Exit(1)
@@ -32,6 +32,7 @@ func main()  {
 
 	app := appilication{
 		config: cfg,
+		db: dbConn,
 	}
 	 
     if err := app.run(app.mount()); err != nil{
