@@ -56,3 +56,30 @@ func (q *Queries) ListLinksById(ctx context.Context, id uuid.UUID) ([]Link, erro
 	}
 	return items, nil
 }
+
+const listLinksByLink = `-- name: ListLinksByLink :many
+SELECT id, link, created_at FROM links WHERE link = $1
+`
+
+func (q *Queries) ListLinksByLink(ctx context.Context, link string) ([]Link, error) {
+	rows, err := q.db.QueryContext(ctx, listLinksByLink, link)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Link
+	for rows.Next() {
+		var i Link
+		if err := rows.Scan(&i.ID, &i.Link, &i.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

@@ -10,6 +10,7 @@ import (
 
 type Service interface {
 	ListLinks(ctx context.Context, id uuid.UUID) ([]database.Link, error)
+	
 }
 
 
