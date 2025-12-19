@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/yihune21/link-shortner/internal/database"
 )
 
 type Handler struct {
@@ -39,4 +40,31 @@ func (h *Handler) ListLinks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(links)
+}
+
+func (h *Handler) CreateLink(w http.ResponseWriter, r *http.Request) {
+	type parameter struct{
+		Link string `json:"link"`
+	}
+    
+	decode := json.NewDecoder(r.Body)
+	params := parameter{}
+	err := decode.Decode(&params)
+
+	if err != nil {
+		http.Error(w, "link is required", http.StatusBadRequest)
+		return
+	}
+
+	link, err := h.service.CreateLink(r.Context(), database.CreateLinkParams{
+
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+    
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(link)
 }

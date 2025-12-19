@@ -10,7 +10,7 @@ import (
 
 type Service interface {
 	ListLinks(ctx context.Context, id uuid.UUID) ([]database.Link, error)
-	
+	CreateLink(cxt context.Context , params database.CreateLinkParams) (database.Link , error)
 }
 
 
@@ -35,3 +35,11 @@ func (s *svc) ListLinks(ctx context.Context, id uuid.UUID) ([]database.Link, err
 	return links, nil
 }
 
+func (s *svc)CreateLink(ctx context.Context , params database.CreateLinkParams) (database.Link, error) {
+	link , err := s.db.CreateLink(ctx , params)
+	if err != nil {
+		return link, err
+	}
+
+	return link, nil
+}
