@@ -8,9 +8,9 @@ import (
 )
 
 func LoadEnv()  {
-	err := godotenv.Load(".env")
+	err := godotenv.Load("../.env")
 	if err != nil{
-		fmt.Printf("Error with loading .env file %v" , err)
+		fmt.Printf("Error with loading .env file %v\n" , err)
 	    return
 	}
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/yihune21/link-shortner/internal/database"
 	"github.com/yihune21/link-shortner/internal/links"
 )
@@ -24,7 +25,15 @@ func (app *appilication)mount() http.Handler  {
 		// through ctx.Done() that the request has timed out and further
 		// processing should be stopped.
 		r.Use(middleware.Timeout(60 * time.Second))
-
+        r.Use(cors.Handler(
+			cors.Options{
+			AllowedOrigins: []string{"https://*"},
+			AllowedMethods: []string{"GET","POST","DELETE","PUT","PATCH"},
+			AllowedHeaders: []string{"*"},
+			ExposedHeaders: []string{"Link"},
+			AllowCredentials: false,
+			MaxAge:             300,
+		}))
 		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("all good"))
 		})
@@ -34,6 +43,7 @@ func (app *appilication)mount() http.Handler  {
 		r.Post("/link",linkHandler.CreateLink)
 		r.Get("/link",linkHandler.ListLinks)
         r.Get("/link/{id}" , linkHandler.GetLink)
+
 		return  r
 }
 
