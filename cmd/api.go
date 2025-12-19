@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -34,26 +34,28 @@ func (app *appilication)mount() http.Handler  {
 			AllowCredentials: false,
 			MaxAge:             300,
 		}))
-		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		
+		linkHandler := links.NewHandler(links.NewService(app.db))
+		r1 := chi.NewRouter()
+		
+		r1.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("all good"))
 		})
-
-		linkHandler := links.NewHandler(links.NewService(app.db))
-
-		r.Post("/link",linkHandler.CreateLink)
-		r.Get("/link",linkHandler.ListLinks)
-        r.Get("/link/{id}" , linkHandler.GetLink)
+		r1.Post("/link",linkHandler.CreateLink)
+		r1.Get("/link",linkHandler.ListLinks)
+        r1.Get("/link/{id}" , linkHandler.GetLink)
+        
+		r.Mount("/api",r1)
 
 		return  r
 }
 
 func (app *appilication)run(h http.Handler) error {
 	srv := &http.Server{
-		Addr:app.config.addr,
+		Addr:":" + app.config.addr,
 		Handler: h,
 	}
-    
-    log.Fatalf("Server started listening on port:%v",app.config.addr)
+    fmt.Printf("Server listen on port:%v\n",app.config.addr)
     return srv.ListenAndServe()
 }
 

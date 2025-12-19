@@ -34,8 +34,9 @@ func main()  {
 		config: cfg,
 		db: dbConn,
 	}
-	 
-    if err := app.run(app.mount()); err != nil{
+	
+	h := app.mount()
+    if err := app.run(h); err != nil{
 		slog.Error("Failed to start the server","error",err)
 		os.Exit(1)
 	}

@@ -32,9 +32,10 @@ func (h *Handler) CreateLink(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "link is required", http.StatusBadRequest)
 		return
 	}
-	
+
 	link, err := h.service.CreateLink(r.Context(), database.CreateLinkParams{
-		
+		ID: uuid.New(),
+		Link: params.Link,
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
