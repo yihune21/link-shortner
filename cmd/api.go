@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/yihune21/link-shortner/internal/database"
+	"github.com/yihune21/link-shortner/internal/links"
 )
 
 
@@ -28,6 +29,11 @@ func (app *appilication)mount() http.Handler  {
 			w.Write([]byte("all good"))
 		})
 
+		linkHandler := links.NewHandler(links.NewService(app.db))
+
+		r.Post("/link",linkHandler.CreateLink)
+		r.Get("/link",linkHandler.ListLinks)
+        r.Get("/link/{id}" , linkHandler.GetLink)
 		return  r
 }
 
