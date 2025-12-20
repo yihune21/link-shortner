@@ -7,42 +7,58 @@ package database
 
 import (
 	"context"
-	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 const createLink = `-- name: CreateLink :one
-INSERT INTO links (id , link , created_at) VALUES ($1 , $2, $3)
-RETURNING id, link, created_at
+INSERT INTO links (id , link , short_link , created_at) VALUES ($1 , $2, $3 ,$4)
+RETURNING id, link, short_link, created_at
 `
 
 type CreateLinkParams struct {
 	ID        uuid.UUID
 	Link      string
-	CreatedAt sql.NullTime
+	ShortLink string
+	CreatedAt time.Time
 }
 
 func (q *Queries) CreateLink(ctx context.Context, arg CreateLinkParams) (Link, error) {
-	row := q.db.QueryRowContext(ctx, createLink, arg.ID, arg.Link, arg.CreatedAt)
+	row := q.db.QueryRowContext(ctx, createLink,
+		arg.ID,
+		arg.Link,
+		arg.ShortLink,
+		arg.CreatedAt,
+	)
 	var i Link
-	err := row.Scan(&i.ID, &i.Link, &i.CreatedAt)
+	err := row.Scan(
+		&i.ID,
+		&i.Link,
+		&i.ShortLink,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
 const getLinkById = `-- name: GetLinkById :one
-SELECT id, link, created_at FROM links WHERE id = $1
+SELECT id, link, short_link, created_at FROM links WHERE id = $1
 `
 
 func (q *Queries) GetLinkById(ctx context.Context, id uuid.UUID) (Link, error) {
 	row := q.db.QueryRowContext(ctx, getLinkById, id)
 	var i Link
-	err := row.Scan(&i.ID, &i.Link, &i.CreatedAt)
+	err := row.Scan(
+		&i.ID,
+		&i.Link,
+		&i.ShortLink,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
 const listLinks = `-- name: ListLinks :many
-SELECT id, link, created_at FROM links
+SELECT id, link, short_link, created_at FROM links
 `
 
 func (q *Queries) ListLinks(ctx context.Context) ([]Link, error) {
@@ -54,7 +70,12 @@ func (q *Queries) ListLinks(ctx context.Context) ([]Link, error) {
 	var items []Link
 	for rows.Next() {
 		var i Link
-		if err := rows.Scan(&i.ID, &i.Link, &i.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Link,
+			&i.ShortLink,
+			&i.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -68,29 +89,18 @@ func (q *Queries) ListLinks(ctx context.Context) ([]Link, error) {
 	return items, nil
 }
 
-const listLinksByLink = `-- name: ListLinksByLink :many
-SELECT id, link, created_at FROM links WHERE link = $1
+const listLinksByLink = `-- name: ListLinksByLink :one
+SELECT id, link, short_link, created_at FROM links WHERE short_link = $1
 `
 
-func (q *Queries) ListLinksByLink(ctx context.Context, link string) ([]Link, error) {
-	rows, err := q.db.QueryContext(ctx, listLinksByLink, link)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Link
-	for rows.Next() {
-		var i Link
-		if err := rows.Scan(&i.ID, &i.Link, &i.CreatedAt); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) ListLinksByLink(ctx context.Context, shortLink string) (Link, error) {
+	row := q.db.QueryRowContext(ctx, listLinksByLink, shortLink)
+	var i Link
+	err := row.Scan(
+		&i.ID,
+		&i.Link,
+		&i.ShortLink,
+		&i.CreatedAt,
+	)
+	return i, err
 }
