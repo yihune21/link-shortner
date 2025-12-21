@@ -1,9 +1,9 @@
 -- +goose Up
 
 CREATE TABLE links(
- id UUID PRIMARY KEY,
+ id BIGSERIAL PRIMARY KEY,
  link TEXT UNIQUE NOT NULL,
- gen_key TEXT UNIQUE NOT NULL,
+ gen_key TEXT UNIQUE,
  created_at TIMESTAMP NOT NULL
 );
 

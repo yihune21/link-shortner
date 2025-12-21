@@ -7,20 +7,19 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 const createLink = `-- name: CreateLink :one
-INSERT INTO links (id , link , short_link , created_at) VALUES ($1 , $2, $3 ,$4)
-RETURNING id, link, short_link, created_at
+INSERT INTO links (id , link , gen_key , created_at) VALUES ($1 , $2, $3 ,$4)
+RETURNING id, link, gen_key, created_at
 `
 
 type CreateLinkParams struct {
-	ID        uuid.UUID
+	ID        int64
 	Link      string
-	ShortLink string
+	GenKey    sql.NullString
 	CreatedAt time.Time
 }
 
@@ -28,37 +27,37 @@ func (q *Queries) CreateLink(ctx context.Context, arg CreateLinkParams) (Link, e
 	row := q.db.QueryRowContext(ctx, createLink,
 		arg.ID,
 		arg.Link,
-		arg.ShortLink,
+		arg.GenKey,
 		arg.CreatedAt,
 	)
 	var i Link
 	err := row.Scan(
 		&i.ID,
 		&i.Link,
-		&i.ShortLink,
+		&i.GenKey,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getLinkById = `-- name: GetLinkById :one
-SELECT id, link, short_link, created_at FROM links WHERE id = $1
+SELECT id, link, gen_key, created_at FROM links WHERE id = $1
 `
 
-func (q *Queries) GetLinkById(ctx context.Context, id uuid.UUID) (Link, error) {
+func (q *Queries) GetLinkById(ctx context.Context, id int64) (Link, error) {
 	row := q.db.QueryRowContext(ctx, getLinkById, id)
 	var i Link
 	err := row.Scan(
 		&i.ID,
 		&i.Link,
-		&i.ShortLink,
+		&i.GenKey,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const listLinks = `-- name: ListLinks :many
-SELECT id, link, short_link, created_at FROM links
+SELECT id, link, gen_key, created_at FROM links
 `
 
 func (q *Queries) ListLinks(ctx context.Context) ([]Link, error) {
@@ -73,7 +72,7 @@ func (q *Queries) ListLinks(ctx context.Context) ([]Link, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Link,
-			&i.ShortLink,
+			&i.GenKey,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -90,16 +89,38 @@ func (q *Queries) ListLinks(ctx context.Context) ([]Link, error) {
 }
 
 const listLinksByLink = `-- name: ListLinksByLink :one
-SELECT id, link, short_link, created_at FROM links WHERE short_link = $1
+SELECT id, link, gen_key, created_at FROM links WHERE gen_key = $1
 `
 
-func (q *Queries) ListLinksByLink(ctx context.Context, shortLink string) (Link, error) {
-	row := q.db.QueryRowContext(ctx, listLinksByLink, shortLink)
+func (q *Queries) ListLinksByLink(ctx context.Context, genKey sql.NullString) (Link, error) {
+	row := q.db.QueryRowContext(ctx, listLinksByLink, genKey)
 	var i Link
 	err := row.Scan(
 		&i.ID,
 		&i.Link,
-		&i.ShortLink,
+		&i.GenKey,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateLinkUniqueKey = `-- name: UpdateLinkUniqueKey :one
+UPDATE links SET gen_key = $1 WHERE link = $2
+RETURNING id, link, gen_key, created_at
+`
+
+type UpdateLinkUniqueKeyParams struct {
+	GenKey sql.NullString
+	Link   string
+}
+
+func (q *Queries) UpdateLinkUniqueKey(ctx context.Context, arg UpdateLinkUniqueKeyParams) (Link, error) {
+	row := q.db.QueryRowContext(ctx, updateLinkUniqueKey, arg.GenKey, arg.Link)
+	var i Link
+	err := row.Scan(
+		&i.ID,
+		&i.Link,
+		&i.GenKey,
 		&i.CreatedAt,
 	)
 	return i, err

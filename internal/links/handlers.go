@@ -3,8 +3,9 @@ package links
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"time"
 
-	"github.com/google/uuid"
 	"github.com/yihune21/link-shortner/internal/database"
 )
 
@@ -34,8 +35,8 @@ func (h *Handler) CreateLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	link, err := h.service.CreateLink(r.Context(), database.CreateLinkParams{
-		ID: uuid.New(),
 		Link: params.Link,
+		CreatedAt: time.Now(),
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -54,7 +55,7 @@ func (h *Handler) GetLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Id, err := uuid.Parse(idStr)
+	Id , err:= strconv.ParseInt(idStr,10,64)
 	if err != nil {
 		http.Error(w, "invalid link_id", http.StatusBadRequest)
 		return

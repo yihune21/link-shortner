@@ -5,14 +5,13 @@
 package database
 
 import (
+	"database/sql"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type Link struct {
-	ID        uuid.UUID
+	ID        int64
 	Link      string
-	ShortLink string
+	GenKey    sql.NullString
 	CreatedAt time.Time
 }
