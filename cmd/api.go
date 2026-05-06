@@ -21,13 +21,11 @@ func (app *appilication)mount() http.Handler  {
 		r.Use(middleware.Logger)
 		r.Use(middleware.Recoverer)
 
-		// Set a timeout value on the request context (ctx), that will signal
-		// through ctx.Done() that the request has timed out and further
-		// processing should be stopped.
+	
 		r.Use(middleware.Timeout(60 * time.Second))
         r.Use(cors.Handler(
 			cors.Options{
-			AllowedOrigins: []string{"https://*"},
+			AllowedOrigins: []string{"*"},
 			AllowedMethods: []string{"GET","POST","DELETE","PUT","PATCH"},
 			AllowedHeaders: []string{"*"},
 			ExposedHeaders: []string{"Link"},
