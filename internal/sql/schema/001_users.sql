@@ -1,11 +1,11 @@
 -- +goose Up
 
-CREATE TABLE links(
+CREATE TABLE users(
  id BIGSERIAL PRIMARY KEY,
- link TEXT UNIQUE NOT NULL,
- gen_key TEXT UNIQUE,
+ name TEXT UNIQUE NOT NULL,
+ email TEXT UNIQUE,
  created_at TIMESTAMP NOT NULL
 );
 
 -- +goose Down
-DROP TABLE links;
+DROP TABLE users;
