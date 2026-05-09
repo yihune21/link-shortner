@@ -1,7 +1,7 @@
 -- +goose Up
 
 CREATE TABLE users(
- id BIGSERIAL PRIMARY KEY,
+ id UUID PRIMARY KEY,
  name TEXT UNIQUE NOT NULL,
  email TEXT UNIQUE,
  created_at TIMESTAMP NOT NULL

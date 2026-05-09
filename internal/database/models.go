@@ -7,10 +7,12 @@ package database
 import (
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Link struct {
-	ID           int64
+	ID           uuid.UUID
 	ShortLink    string
 	OriginalLink string
 	UserID       int64
@@ -18,7 +20,7 @@ type Link struct {
 }
 
 type User struct {
-	ID        int64
+	ID        uuid.UUID
 	Name      string
 	Email     sql.NullString
 	CreatedAt time.Time

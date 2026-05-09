@@ -8,6 +8,8 @@ package database
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const createLink = `-- name: CreateLink :one
@@ -16,7 +18,7 @@ RETURNING id, short_link, original_link, user_id, created_at
 `
 
 type CreateLinkParams struct {
-	ID           int64
+	ID           uuid.UUID
 	ShortLink    string
 	OriginalLink string
 	UserID       int64
@@ -46,7 +48,7 @@ const getLinkById = `-- name: GetLinkById :one
 SELECT id, short_link, original_link, user_id, created_at FROM links WHERE id = $1
 `
 
-func (q *Queries) GetLinkById(ctx context.Context, id int64) (Link, error) {
+func (q *Queries) GetLinkById(ctx context.Context, id uuid.UUID) (Link, error) {
 	row := q.db.QueryRowContext(ctx, getLinkById, id)
 	var i Link
 	err := row.Scan(

@@ -9,6 +9,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -17,7 +19,7 @@ RETURNING id, name, email, created_at
 `
 
 type CreateUserParams struct {
-	ID        int64
+	ID        uuid.UUID
 	Name      string
 	Email     sql.NullString
 	CreatedAt time.Time
@@ -44,7 +46,7 @@ const getUserById = `-- name: GetUserById :one
 SELECT id, name, email, created_at FROM users WHERE id = $1
 `
 
-func (q *Queries) GetUserById(ctx context.Context, id int64) (User, error) {
+func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserById, id)
 	var i User
 	err := row.Scan(
