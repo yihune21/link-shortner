@@ -15,7 +15,7 @@ type Link struct {
 	ID           uuid.UUID
 	ShortLink    string
 	OriginalLink string
-	UserID       int64
+	UserID       uuid.UUID
 	CreatedAt    time.Time
 }
 
@@ -23,5 +23,6 @@ type User struct {
 	ID        uuid.UUID
 	Name      string
 	Email     sql.NullString
+	Password  sql.NullString
 	CreatedAt time.Time
 }

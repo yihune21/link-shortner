@@ -21,7 +21,7 @@ type CreateLinkParams struct {
 	ID           uuid.UUID
 	ShortLink    string
 	OriginalLink string
-	UserID       int64
+	UserID       uuid.UUID
 	CreatedAt    time.Time
 }
 

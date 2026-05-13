@@ -14,14 +14,15 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (id , name ,email ,  created_at) VALUES ($1 , $2, $3 ,$4)
-RETURNING id, name, email, created_at
+INSERT INTO users (id , name ,email ,password ,  created_at) VALUES ($1 , $2, $3 ,$4,$5)
+RETURNING id, name, email, password, created_at
 `
 
 type CreateUserParams struct {
 	ID        uuid.UUID
 	Name      string
 	Email     sql.NullString
+	Password  sql.NullString
 	CreatedAt time.Time
 }
 
@@ -30,6 +31,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.ID,
 		arg.Name,
 		arg.Email,
+		arg.Password,
 		arg.CreatedAt,
 	)
 	var i User
@@ -37,13 +39,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.ID,
 		&i.Name,
 		&i.Email,
+		&i.Password,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, name, email, created_at FROM users WHERE id = $1
+SELECT id, name, email, password, created_at FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
@@ -53,13 +56,14 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.ID,
 		&i.Name,
 		&i.Email,
+		&i.Password,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const listusers = `-- name: Listusers :many
-SELECT id, name, email, created_at FROM users
+SELECT id, name, email, password, created_at FROM users
 `
 
 func (q *Queries) Listusers(ctx context.Context) ([]User, error) {
@@ -75,6 +79,7 @@ func (q *Queries) Listusers(ctx context.Context) ([]User, error) {
 			&i.ID,
 			&i.Name,
 			&i.Email,
+			&i.Password,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err

@@ -30,6 +30,7 @@ func (h *UserHandler)CreateUser(w http.ResponseWriter , r *http.Request)()  {
 	var req struct {
 		Name    string `json:"name"`
 		Email  string `json:"email"`
+		Password string `jsom:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		WriteJSON(w, http.StatusBadRequest, "Invalid request body.")

@@ -4,6 +4,7 @@ CREATE TABLE users(
  id UUID PRIMARY KEY,
  name TEXT UNIQUE NOT NULL,
  email TEXT UNIQUE,
+ password TEXT UNIQUE,
  created_at TIMESTAMP NOT NULL
 );
 
