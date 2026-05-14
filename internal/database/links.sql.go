@@ -44,6 +44,15 @@ func (q *Queries) CreateLink(ctx context.Context, arg CreateLinkParams) (Link, e
 	return i, err
 }
 
+const deleteLink = `-- name: DeleteLink :exec
+DELETE FROM links WHERE id = $1
+`
+
+func (q *Queries) DeleteLink(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteLink, id)
+	return err
+}
+
 const getLinkById = `-- name: GetLinkById :one
 SELECT id, short_link, original_link, user_id, created_at FROM links WHERE id = $1
 `
@@ -59,6 +68,39 @@ func (q *Queries) GetLinkById(ctx context.Context, id uuid.UUID) (Link, error) {
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getLinksByUserId = `-- name: GetLinksByUserId :many
+SELECT id, short_link, original_link, user_id, created_at FROM links WHERE user_id = $1
+`
+
+func (q *Queries) GetLinksByUserId(ctx context.Context, userID uuid.UUID) ([]Link, error) {
+	rows, err := q.db.QueryContext(ctx, getLinksByUserId, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Link
+	for rows.Next() {
+		var i Link
+		if err := rows.Scan(
+			&i.ID,
+			&i.ShortLink,
+			&i.OriginalLink,
+			&i.UserID,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listLinks = `-- name: ListLinks :many

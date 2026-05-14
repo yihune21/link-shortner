@@ -5,6 +5,11 @@ RETURNING *;
 -- name: GetLinkById :one
 SELECT * FROM links WHERE id = $1;
 
-
 -- name: ListLinks :many
 SELECT * FROM links;
+
+-- name: GetLinksByUserId :many
+SELECT * FROM links WHERE user_id = $1;
+
+-- name: DeleteLink :exec
+DELETE FROM links WHERE id = $1;
