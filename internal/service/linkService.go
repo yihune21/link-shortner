@@ -76,7 +76,13 @@ func (s *LinkService)GetLinkById(ctx context.Context , id uuid.UUID) (Link , err
 	}
 	return mapLink(dbLink) , nil
 }
-
+func (s *LinkService)GetLinksByShortLink(ctx context.Context , short_link string) (Link , error)  {
+	dbLink , err  := s.q.GetLinksByShortLink(ctx , short_link)
+	if err != nil {
+		return  Link{},err
+	}
+	return mapLink(dbLink) , nil
+}
 func (s *LinkService)GetLinksByUserId(ctx context.Context , dbUser *database.User) ([]Link , error)  {
 	id := dbUser.ID
 	dbLink , err  := s.q.GetLinksByUserId(ctx , id)

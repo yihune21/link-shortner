@@ -70,6 +70,23 @@ func (q *Queries) GetLinkById(ctx context.Context, id uuid.UUID) (Link, error) {
 	return i, err
 }
 
+const getLinksByShortLink = `-- name: GetLinksByShortLink :one
+SELECT id, short_link, original_link, user_id, created_at FROM links WHERE short_link = $1
+`
+
+func (q *Queries) GetLinksByShortLink(ctx context.Context, shortLink string) (Link, error) {
+	row := q.db.QueryRowContext(ctx, getLinksByShortLink, shortLink)
+	var i Link
+	err := row.Scan(
+		&i.ID,
+		&i.ShortLink,
+		&i.OriginalLink,
+		&i.UserID,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getLinksByUserId = `-- name: GetLinksByUserId :many
 SELECT id, short_link, original_link, user_id, created_at FROM links WHERE user_id = $1
 `
