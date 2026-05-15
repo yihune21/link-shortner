@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/yihune21/link-shortner/internal/database"
 	"github.com/yihune21/link-shortner/internal/service"
 )
@@ -28,7 +30,60 @@ func (h *LinkHandler)CreateLink(w http.ResponseWriter , r *http.Request , user *
 	dbLink , err := h.ls.CreateLink(r.Context() , req.OriginalLink , user)
     if err != nil {
 		WriteError(w , 401 , err.Error())
+		return
 	}
     
 	WriteJSON(w , 200 , dbLink)
+}
+
+func (h *LinkHandler)ListLinks(w http.ResponseWriter , r *http.Request )  {
+	links , err := h.ls.ListLink(r.Context())
+    if err != nil {
+		WriteError(w , 404 , err.Error())
+		return
+	}
+
+	WriteJSON(w , 200 , links)
+
+}
+
+func (h *LinkHandler)GetLinkById(w http.ResponseWriter , r *http.Request )  {
+	idStr := chi.URLParam(r,"id")
+	if idStr == "" {
+		WriteError(w ,400 , "Link id is required.")
+		return
+	}
+	id, err :=uuid.Parse(idStr)
+    if err != nil {
+		WriteError(w ,400 , "Link id is required.")
+		return
+	}
+	link , err := h.ls.GetLinkById(r.Context() , id)
+	if err != nil{
+		WriteError(w ,404 , "Link not found.")
+		return
+	}
+
+	WriteJSON(w , 200 , link)
+}
+func (h *LinkHandler)GetLinksByUserId(w http.ResponseWriter , r *http.Request)  {
+	//:TODO
+}
+func (h *LinkHandler)DeleteLink(w http.ResponseWriter , r *http.Request)  {
+	idStr :=chi.URLParam(r,"id")
+	if idStr == "" {
+		WriteError(w ,400 , "Link id is required.")
+		return
+	}
+	id, err :=uuid.Parse(idStr)
+    if err != nil {
+		WriteError(w ,400 , "Link id is required.")
+		return
+	}
+	err = h.ls.DeleteLink(r.Context(),id)
+	if err != nil{
+		WriteError(w,400,err.Error())
+		return
+	}
+	WriteJSON(w ,200 ,nil)
 }
