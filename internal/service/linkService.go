@@ -42,7 +42,7 @@ func mapLinks(dbLinks []database.Link)[]Link{
     return Links
 }
 
-func (s *LinkService)CreateLink(ctx context.Context ,original_link string ,dbUser database.User)( Link , error)  {
+func (s *LinkService)CreateLink(ctx context.Context ,original_link string ,dbUser *database.User)( Link , error)  {
 	
 	//short link computation todo
 	shorten_url :=  original_link
@@ -75,6 +75,14 @@ func (s *LinkService)GetLinkById(ctx context.Context , id uuid.UUID) (Link , err
 		return  Link{},ErrNotFound
 	}
 	return mapLink(dbLink) , nil
+}
+
+func (s *LinkService)GetLinksByUserId(ctx context.Context , id uuid.UUID) ([]Link , error)  {
+	dbLink , err  := s.q.GetLinksByUserId(ctx , id)
+	if err != nil {
+		return  []Link{},ErrNotFound
+	}
+	return mapLinks(dbLink) , nil
 }
 
 func (s *LinkService)DeleteLink(ctx context.Context , id uuid.UUID) error {
