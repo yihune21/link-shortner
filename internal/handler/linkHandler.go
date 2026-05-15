@@ -66,8 +66,13 @@ func (h *LinkHandler)GetLinkById(w http.ResponseWriter , r *http.Request )  {
 
 	WriteJSON(w , 200 , link)
 }
-func (h *LinkHandler)GetLinksByUserId(w http.ResponseWriter , r *http.Request)  {
-	//:TODO
+func (h *LinkHandler)GetLinksByUserId(w http.ResponseWriter , r *http.Request,user *database.User)  {
+	links,err:= h.ls.GetLinksByUserId(r.Context(),user)
+	if err != nil{
+		WriteError(w ,404 , "Link not found.")
+		return
+        }
+	WriteJSON(w,200,links)
 }
 func (h *LinkHandler)DeleteLink(w http.ResponseWriter , r *http.Request)  {
 	idStr :=chi.URLParam(r,"id")

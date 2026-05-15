@@ -77,7 +77,8 @@ func (s *LinkService)GetLinkById(ctx context.Context , id uuid.UUID) (Link , err
 	return mapLink(dbLink) , nil
 }
 
-func (s *LinkService)GetLinksByUserId(ctx context.Context , id uuid.UUID) ([]Link , error)  {
+func (s *LinkService)GetLinksByUserId(ctx context.Context , dbUser *database.User) ([]Link , error)  {
+	id := dbUser.ID
 	dbLink , err  := s.q.GetLinksByUserId(ctx , id)
 	if err != nil {
 		return  []Link{},ErrNotFound
