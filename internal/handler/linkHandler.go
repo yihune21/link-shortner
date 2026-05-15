@@ -67,15 +67,8 @@ func (h *LinkHandler)GetLinkById(w http.ResponseWriter , r *http.Request )  {
 	WriteJSON(w , 200 , link)
 }
 func (h *LinkHandler)GetLinksByShortLink(w http.ResponseWriter , r *http.Request) {
-	var req struct {
-		ShortLink    string `json:"short_link"`
-	} 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		WriteJSON(w, http.StatusBadRequest, "Invalid request body.")
-		return
-	}
-    
-	link , err := h.ls.GetLinksByShortLink(r.Context(),req.ShortLink)
+	shortId := chi.URLParam(r , "shortId")
+	link , err := h.ls.GetLinksByShortLink(r.Context(),shortId)
 	if err != nil {
 		WriteError(w , 401 , err.Error())
 		return
