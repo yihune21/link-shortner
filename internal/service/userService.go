@@ -101,10 +101,10 @@ func (s *UserService)GetUserByEmail(ctx context.Context , email string) (User , 
 	return mapUser(dbUser) , nil
 }
 
-func (s *UserService)UpdateUserName(ctx context.Context , id uuid.UUID , name string) (User , error){
+func (s *UserService)UpdateUserName(ctx context.Context ,  name string , dbUser database.User) (User , error){
 	dbUser , err := s.q.UpdateUserName(ctx , database.UpdateUserNameParams{
 		Name: name,
-		ID: id,
+		ID: dbUser.ID,
 	})
 
 	if err != nil {

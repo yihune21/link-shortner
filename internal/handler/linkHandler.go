@@ -55,7 +55,7 @@ func (h *LinkHandler)GetLinkById(w http.ResponseWriter , r *http.Request )  {
 	}
 	id, err :=uuid.Parse(idStr)
     if err != nil {
-		WriteError(w ,400 , "Link id is required.")
+		WriteError(w ,400 , "Couldn't parse link id.")
 		return
 	}
 	link , err := h.ls.GetLinkById(r.Context() , id)
