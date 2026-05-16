@@ -27,6 +27,8 @@ func (a *AuthHandler)MiddlewareAuth(w http.ResponseWriter , r *http.Request) {
             WriteError(w , 401 ,"ACCESS TOKEN EXPIRED!")
 			return 
 		  }
+
+		  
 		  
 		//   _ , err = apiConf.db.GetToken(r.Context(),access_token)
 
