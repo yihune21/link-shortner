@@ -130,3 +130,37 @@ func (h *UserHandler)DeleteUser(w http.ResponseWriter , r *http.Request)  {
 
 
 }
+func (h *UserHandler)Login(w http.ResponseWriter , r *http.Request)  {
+	var req struct {
+		Email  string `json:"email"`
+		Password string `jsom:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		WriteJSON(w, http.StatusBadRequest, "Invalid request body.")
+		return
+	}
+	user , err :=h.us.Login(r.Context() ,req.Email , req.Password)
+	if err != nil {
+		WriteError(w,400,err.Error())
+		return
+	}
+	WriteJSON(w,200,user)
+}
+func (h *UserHandler)Logout(w http.ResponseWriter , r *http.Request)  {
+	idStr := chi.URLParam(r,"id")
+	if idStr == "" {
+		WriteError(w ,400 , "User id is required.")
+		return
+	}
+	id, err :=uuid.Parse(idStr)
+    if err != nil {
+		WriteError(w ,400 , "Couldn't parse user id.")
+		return
+	}
+	err = h.us.Logout(r.Context() ,id)
+	if err != nil {
+		WriteError(w,400,err.Error())
+		return
+	}
+	WriteJSON(w,200,nil)
+}
