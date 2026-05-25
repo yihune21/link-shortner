@@ -89,7 +89,6 @@ func (h *UserHandler)GetUserByEmail(w http.ResponseWriter , r *http.Request)  {
 
 	WriteJSON(w,200,user)
 }
-
 func (h *UserHandler)UpdateUserName(w http.ResponseWriter , r *http.Request,user database.User)  {
 	var req struct {
 		Name  string `json:"name"`
@@ -107,8 +106,6 @@ func (h *UserHandler)UpdateUserName(w http.ResponseWriter , r *http.Request,user
 
 	WriteJSON(w,200,dbUser)
 }
-
-
 func (h *UserHandler)DeleteUser(w http.ResponseWriter , r *http.Request)  {
 	idStr := chi.URLParam(r,"id")
 	if idStr == "" {

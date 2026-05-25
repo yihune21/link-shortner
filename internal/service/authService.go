@@ -1,10 +1,12 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/yihune21/link-shortner/internal/database"
 )
 
@@ -32,3 +34,11 @@ func (s *AuthService)GetToken(headers http.Header) (string , error)  {
 	return vals[1],nil
 }
 
+func (s *AuthService)GetUserById(ctx context.Context , id uuid.UUID) (User , error) {
+	user , err := s.q.GetUserById(ctx , id)
+	if err != nil{
+       return User{},err
+	}
+
+	return mapUser(user) , nil
+}

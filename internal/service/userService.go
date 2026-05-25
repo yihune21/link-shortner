@@ -87,7 +87,6 @@ func (s *UserService)GetUserById(ctx context.Context , id uuid.UUID) (User , err
 	}
 	return mapUser(dbUser) , nil
 }
-
 func (s *UserService)GetUserByEmail(ctx context.Context , email string) (User , error)  {
 	user_email := sql.NullString{}
 	if email != "" {
@@ -100,7 +99,6 @@ func (s *UserService)GetUserByEmail(ctx context.Context , email string) (User , 
 	}
 	return mapUser(dbUser) , nil
 }
-
 func (s *UserService)UpdateUserName(ctx context.Context ,  name string , dbUser database.User) (User , error){
 	dbUser , err := s.q.UpdateUserName(ctx , database.UpdateUserNameParams{
 		Name: name,
@@ -113,11 +111,39 @@ func (s *UserService)UpdateUserName(ctx context.Context ,  name string , dbUser 
 
 	return mapUser(dbUser) , nil
 }
-
 func (s *UserService)DeleteUser(ctx context.Context , id uuid.UUID) error {
 	err  := s.q.DeleteUser(ctx , id)
 	if err != nil {
 		return  ErrNotFound
+	}
+	return nil
+}
+func (s *UserService)Login(ctx context.Context,email , password string) (User, error) {
+    user_email := sql.NullString{}
+    if email !="" {
+	   user_email.String=email
+	   user_email.Valid=true
+	}
+	user_password := sql.NullString{}
+    if password !="" {
+	   user_password.String=password
+	   user_password.Valid=true
+	}
+
+	user , err := s.q.LoginUser(ctx,database.LoginUserParams{
+		Email: user_email,
+		Password: user_password,
+	})
+	if err != nil {
+		return User{},err
+	}
+
+	return mapUser(user) , nil
+}
+func (s *UserService)Logout(ctx context.Context , id uuid.UUID) error {
+    err := s.q.DeleteRefreshToken(ctx , id)
+	if err != nil {
+		return err
 	}
 	return nil
 }

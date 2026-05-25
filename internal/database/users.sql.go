@@ -121,6 +121,28 @@ func (q *Queries) Listusers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
+const loginUser = `-- name: LoginUser :one
+SELECT id, name, email, password, created_at FROM users WHERE email =$1 and password=$2
+`
+
+type LoginUserParams struct {
+	Email    sql.NullString
+	Password sql.NullString
+}
+
+func (q *Queries) LoginUser(ctx context.Context, arg LoginUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, loginUser, arg.Email, arg.Password)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.Password,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const updateUserName = `-- name: UpdateUserName :one
 UPDATE users 
 SET name = $1

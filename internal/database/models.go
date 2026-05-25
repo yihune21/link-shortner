@@ -19,6 +19,14 @@ type Link struct {
 	CreatedAt    time.Time
 }
 
+type RefreshToken struct {
+	ID        uuid.UUID
+	ExpDate   time.Time
+	Token     string
+	UserID    uuid.UUID
+	CreatedAt time.Time
+}
+
 type User struct {
 	ID        uuid.UUID
 	Name      string
