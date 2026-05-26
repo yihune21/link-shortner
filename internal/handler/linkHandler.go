@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/yihune21/link-shortner/internal/database"
 	"github.com/yihune21/link-shortner/internal/service"
 )
 
@@ -19,7 +18,7 @@ func NewLinkHandler(ls *service.LinkService) *LinkHandler {
 	return &LinkHandler{ls: ls}
 }
 
-func (h *LinkHandler)CreateLink(w http.ResponseWriter , r *http.Request , user *database.User)()  {
+func (h *LinkHandler)CreateLink(w http.ResponseWriter , r *http.Request)()  {
 	var req struct {
 		OriginalLink    string `json:"original_link"`
 	} 
@@ -27,7 +26,19 @@ func (h *LinkHandler)CreateLink(w http.ResponseWriter , r *http.Request , user *
 		WriteJSON(w, http.StatusBadRequest, "Invalid request body.")
 		return
 	}
-	dbLink , err := h.ls.CreateLink(r.Context() , req.OriginalLink , user)
+    
+    idStr := chi.URLParam(r,"id")
+	if idStr == "" {
+		WriteError(w ,400 , "Link id is required.")
+		return
+	}
+	id, err :=uuid.Parse(idStr)
+    if err != nil {
+		WriteError(w ,400 , "Couldn't parse link id.")
+		return
+	}
+
+	dbLink , err := h.ls.CreateLink(r.Context() , req.OriginalLink ,id)
     if err != nil {
 		WriteError(w , 401 , err.Error())
 		return
@@ -35,7 +46,6 @@ func (h *LinkHandler)CreateLink(w http.ResponseWriter , r *http.Request , user *
     
 	WriteJSON(w , 200 , dbLink)
 }
-
 func (h *LinkHandler)ListLinks(w http.ResponseWriter , r *http.Request )  {
 	links , err := h.ls.ListLink(r.Context())
     if err != nil {
@@ -44,9 +54,7 @@ func (h *LinkHandler)ListLinks(w http.ResponseWriter , r *http.Request )  {
 	}
 
 	WriteJSON(w , 200 , links)
-
 }
-
 func (h *LinkHandler)GetLinkById(w http.ResponseWriter , r *http.Request )  {
 	idStr := chi.URLParam(r,"id")
 	if idStr == "" {
@@ -75,9 +83,18 @@ func (h *LinkHandler)GetLinksByShortLink(w http.ResponseWriter , r *http.Request
 	}
 	WriteJSON(w , 200 , link.OriginalLink)
 }
-
-func (h *LinkHandler)GetLinksByUserId(w http.ResponseWriter , r *http.Request,user *database.User)  {
-	links,err:= h.ls.GetLinksByUserId(r.Context(),user)
+func (h *LinkHandler)GetLinksByUserId(w http.ResponseWriter , r *http.Request)  {
+    idStr := chi.URLParam(r,"id")
+	if idStr == "" {
+		WriteError(w ,400 , "Link id is required.")
+		return
+	}
+	id, err :=uuid.Parse(idStr)
+    if err != nil {
+		WriteError(w ,400 , "Couldn't parse link id.")
+		return
+	}
+	links,err:= h.ls.GetLinksByUserId(r.Context(),id)
 	if err != nil{
 		WriteError(w ,404 , "Link not found.")
 		return

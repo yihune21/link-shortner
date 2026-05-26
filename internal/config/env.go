@@ -1,18 +1,17 @@
 package config
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/lpernett/godotenv"
 )
 
-func LoadEnv()  {
+func LoadEnv() error  {
 	err := godotenv.Load("../.env")
 	if err != nil{
-		fmt.Printf("Error with loading .env file %v\n" , err)
-	    return
+	    return err
 	}
+	return nil
 }
 
 func GetEnv(key string) string {

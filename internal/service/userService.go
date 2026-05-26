@@ -31,6 +31,24 @@ type User struct {
 	Password    string `json:"password"`
 	CreatedAt   time.Time `json:"created_at"`
 }
+type OTP struct {
+	ID       uuid.UUID   `json:"id"`
+	Otp    	string `json:"otp"`
+	UserId  uuid.UUID `json:"user_id"`
+	ExpAt    time.Time `json:"exp_at"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+func mapOtp(dbotp database.Otp) OTP{
+     return OTP{
+        ID: dbotp.ID,
+		Otp: dbotp.Otp,
+		UserId: dbotp.UserID,
+		ExpAt: dbotp.ExpAt,
+		CreatedAt: dbotp.CreatedAt,
+		UpdatedAt: dbotp.UpdatedAt,
+	 }
+}
 
 func mapUser(dbuser database.User) User{
      return User{
@@ -99,10 +117,26 @@ func (s *UserService)GetUserByEmail(ctx context.Context , email string) (User , 
 	}
 	return mapUser(dbUser) , nil
 }
-func (s *UserService)UpdateUserName(ctx context.Context ,  name string , dbUser database.User) (User , error){
+func (s *UserService)UpdateUserName(ctx context.Context ,  name string , id uuid.UUID) (User , error){
 	dbUser , err := s.q.UpdateUserName(ctx , database.UpdateUserNameParams{
 		Name: name,
-		ID: dbUser.ID,
+		ID: id,
+	})
+
+	if err != nil {
+		return User{} , err
+	}
+
+	return mapUser(dbUser) , nil
+}
+func (s *UserService)UpdateUserPassword(ctx context.Context ,  password string ,id uuid.UUID) (User , error){
+	user_password := sql.NullString{}
+	if user_password.String != ""{
+		user_password.String = password
+	}
+	dbUser , err := s.q.UpdateUserPassword(ctx , database.UpdateUserPasswordParams{
+		Password: user_password,
+		ID:id,
 	})
 
 	if err != nil {
@@ -144,6 +178,49 @@ func (s *UserService)Logout(ctx context.Context , id uuid.UUID) error {
     err := s.q.DeleteRefreshToken(ctx , id)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+func (s *UserService)VerifyUser(ctx context.Context ,id uuid.UUID) (User , error){
+	is_verified := sql.NullBool{}
+	is_verified.Bool =true
+	is_verified.Valid= true
+	dbUser , err := s.q.VerifyUser(ctx , database.VerifyUserParams{
+		IsVerified: is_verified,
+		ID: id,
+	})
+
+	if err != nil {
+		return User{} , err
+	}
+
+	return mapUser(dbUser) , nil
+}
+func (s *UserService)CreateOtp(ctx context.Context ,otp string ,id uuid.UUID) error {
+	_, err := s.q.CreateOtp(ctx , database.CreateOtpParams{
+		ID: uuid.New(),
+		Otp: otp,
+        UserID: id,
+		ExpAt: time.Now().Add(15 * time.Minute) ,
+        CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (s *UserService)GetOtpByUserId(ctx context.Context,id uuid.UUID) (OTP ,error) {
+	otp, err := s.q.GetOtpByUserId(ctx ,id)
+	if err != nil {
+		return OTP{} , err
+	}
+	return mapOtp(otp) , nil
+}
+func (s *UserService)DeleteOtp(ctx context.Context,id uuid.UUID) (error) {
+	err := s.q.DeleteExpiredOtps(ctx ,id)
+	if err != nil {
+		return  err
 	}
 	return nil
 }

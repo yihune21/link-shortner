@@ -19,6 +19,15 @@ type Link struct {
 	CreatedAt    time.Time
 }
 
+type Otp struct {
+	ID        uuid.UUID
+	Otp       string
+	UserID    uuid.UUID
+	ExpAt     time.Time
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 type RefreshToken struct {
 	ID        uuid.UUID
 	ExpDate   time.Time
@@ -28,9 +37,11 @@ type RefreshToken struct {
 }
 
 type User struct {
-	ID        uuid.UUID
-	Name      string
-	Email     sql.NullString
-	Password  sql.NullString
-	CreatedAt time.Time
+	ID         uuid.UUID
+	Name       string
+	Email      sql.NullString
+	Password   sql.NullString
+	IsVerified sql.NullBool
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }

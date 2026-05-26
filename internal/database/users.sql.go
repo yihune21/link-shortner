@@ -14,16 +14,18 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (id , name ,email ,password ,  created_at) VALUES ($1 , $2, $3 ,$4,$5)
-RETURNING id, name, email, password, created_at
+INSERT INTO users (id , name ,email ,password ,is_verified ,   created_at , updated_at) VALUES ($1 , $2, $3 ,$4,$5,$6,$7)
+RETURNING id, name, email, password, is_verified, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	ID        uuid.UUID
-	Name      string
-	Email     sql.NullString
-	Password  sql.NullString
-	CreatedAt time.Time
+	ID         uuid.UUID
+	Name       string
+	Email      sql.NullString
+	Password   sql.NullString
+	IsVerified sql.NullBool
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -32,7 +34,9 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Name,
 		arg.Email,
 		arg.Password,
+		arg.IsVerified,
 		arg.CreatedAt,
+		arg.UpdatedAt,
 	)
 	var i User
 	err := row.Scan(
@@ -40,7 +44,9 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Name,
 		&i.Email,
 		&i.Password,
+		&i.IsVerified,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -55,7 +61,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, name, email, password, created_at FROM users WHERE email=$1
+SELECT id, name, email, password, is_verified, created_at, updated_at FROM users WHERE email=$1
 `
 
 func (q *Queries) GetUser(ctx context.Context, email sql.NullString) (User, error) {
@@ -66,13 +72,15 @@ func (q *Queries) GetUser(ctx context.Context, email sql.NullString) (User, erro
 		&i.Name,
 		&i.Email,
 		&i.Password,
+		&i.IsVerified,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, name, email, password, created_at FROM users WHERE id = $1
+SELECT id, name, email, password, is_verified, created_at, updated_at FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
@@ -83,13 +91,15 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.Name,
 		&i.Email,
 		&i.Password,
+		&i.IsVerified,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const listusers = `-- name: Listusers :many
-SELECT id, name, email, password, created_at FROM users
+SELECT id, name, email, password, is_verified, created_at, updated_at FROM users
 `
 
 func (q *Queries) Listusers(ctx context.Context) ([]User, error) {
@@ -106,7 +116,9 @@ func (q *Queries) Listusers(ctx context.Context) ([]User, error) {
 			&i.Name,
 			&i.Email,
 			&i.Password,
+			&i.IsVerified,
 			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -122,7 +134,7 @@ func (q *Queries) Listusers(ctx context.Context) ([]User, error) {
 }
 
 const loginUser = `-- name: LoginUser :one
-SELECT id, name, email, password, created_at FROM users WHERE email =$1 and password=$2
+SELECT id, name, email, password, is_verified, created_at, updated_at FROM users WHERE email =$1 and password=$2
 `
 
 type LoginUserParams struct {
@@ -138,7 +150,9 @@ func (q *Queries) LoginUser(ctx context.Context, arg LoginUserParams) (User, err
 		&i.Name,
 		&i.Email,
 		&i.Password,
+		&i.IsVerified,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -147,7 +161,7 @@ const updateUserName = `-- name: UpdateUserName :one
 UPDATE users 
 SET name = $1
 WHERE id =$2
-RETURNING id, name, email, password, created_at
+RETURNING id, name, email, password, is_verified, created_at, updated_at
 `
 
 type UpdateUserNameParams struct {
@@ -163,7 +177,9 @@ func (q *Queries) UpdateUserName(ctx context.Context, arg UpdateUserNameParams) 
 		&i.Name,
 		&i.Email,
 		&i.Password,
+		&i.IsVerified,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -172,7 +188,7 @@ const updateUserPassword = `-- name: UpdateUserPassword :one
 UPDATE users 
 SET password = $1
 WHERE id =$2
-RETURNING id, name, email, password, created_at
+RETURNING id, name, email, password, is_verified, created_at, updated_at
 `
 
 type UpdateUserPasswordParams struct {
@@ -188,7 +204,36 @@ func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPassword
 		&i.Name,
 		&i.Email,
 		&i.Password,
+		&i.IsVerified,
 		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const verifyUser = `-- name: VerifyUser :one
+UPDATE users 
+SET is_verified = $1
+WHERE id =$2
+RETURNING id, name, email, password, is_verified, created_at, updated_at
+`
+
+type VerifyUserParams struct {
+	IsVerified sql.NullBool
+	ID         uuid.UUID
+}
+
+func (q *Queries) VerifyUser(ctx context.Context, arg VerifyUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, verifyUser, arg.IsVerified, arg.ID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.Password,
+		&i.IsVerified,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

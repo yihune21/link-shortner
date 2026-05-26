@@ -5,7 +5,9 @@ CREATE TABLE users(
  name TEXT UNIQUE NOT NULL,
  email TEXT UNIQUE,
  password TEXT UNIQUE,
- created_at TIMESTAMP NOT NULL
+ is_verified BOOLEAN DEFAULT FALSE,
+ created_at TIMESTAMP NOT NULL , 
+ updated_At TIMESTAMP NOT NULL
 );
 
 -- +goose Down

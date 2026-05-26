@@ -65,7 +65,7 @@ func isUniqueConstraintError(err error) bool {
     return false
 }
 
-func (s *LinkService) CreateLink(ctx context.Context, original_link string, dbUser *database.User) (Link, error) {
+func (s *LinkService) CreateLink(ctx context.Context, original_link string , id uuid.UUID) (Link, error) {
     const maxRetries = 3
     var dbLink database.Link
     var err error
@@ -79,7 +79,7 @@ func (s *LinkService) CreateLink(ctx context.Context, original_link string, dbUs
             ID:           uuid.New(),
             ShortLink:    shortKey, 
             OriginalLink: original_link,
-            UserID:       dbUser.ID,
+            UserID:     id ,
             CreatedAt:    time.Now().UTC(),
         })
 
@@ -118,8 +118,7 @@ func (s *LinkService)GetLinksByShortLink(ctx context.Context , short_link string
 	}
 	return mapLink(dbLink) , nil
 }
-func (s *LinkService)GetLinksByUserId(ctx context.Context , dbUser *database.User) ([]Link , error)  {
-	id := dbUser.ID
+func (s *LinkService)GetLinksByUserId(ctx context.Context ,id uuid.UUID) ([]Link , error)  {
 	dbLink , err  := s.q.GetLinksByUserId(ctx , id)
 	if err != nil {
 		return  []Link{},ErrNotFound

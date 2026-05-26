@@ -3,10 +3,10 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/yihune21/link-shortner/internal/database"
 	"github.com/yihune21/link-shortner/internal/service"
 )
 
@@ -107,7 +107,7 @@ func (h *UserHandler)GetUserByEmail(w http.ResponseWriter , r *http.Request)  {
 
 	WriteJSON(w,200,user)
 }
-func (h *UserHandler)UpdateUserName(w http.ResponseWriter , r *http.Request,user database.User)  {
+func (h *UserHandler)UpdateUserName(w http.ResponseWriter , r *http.Request)  {
 	var req struct {
 		Name  string `json:"name"`
 	}
@@ -116,13 +116,53 @@ func (h *UserHandler)UpdateUserName(w http.ResponseWriter , r *http.Request,user
 		return
 	}
 
-	dbUser , err :=h.us.UpdateUserName(r.Context(),req.Name , user)
+	idStr := chi.URLParam(r,"id")
+	if idStr == "" {
+		WriteError(w ,400 , "User id is required.")
+		return
+	}
+	id, err :=uuid.Parse(idStr)
+    if err != nil {
+		WriteError(w ,400 , "Couldn't parse user id.")
+		return
+	}
+
+	dbUser , err :=h.us.UpdateUserName(r.Context(),req.Name , id)
 	if err !=nil {
 	    WriteError(w,400,err.Error())
 		return
 	}
 
 	WriteJSON(w,200,dbUser)
+}
+func (h *UserHandler)UpdateUserPassword(w http.ResponseWriter , r *http.Request)  {
+	var req struct {
+		Password  string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		WriteJSON(w, http.StatusBadRequest, "Invalid request body.")
+		return
+	}
+
+	idStr := chi.URLParam(r,"id")
+	if idStr == "" {
+		WriteError(w ,400 , "User id is required.")
+		return
+	}
+	id, err :=uuid.Parse(idStr)
+    if err != nil {
+		WriteError(w ,400 , "Couldn't parse user id.")
+		return
+	}
+
+	dbUser , err :=h.us.UpdateUserPassword(r.Context(),req.Password , id)
+	if err !=nil {
+	    WriteError(w,400,err.Error())
+		return
+	}
+
+	WriteJSON(w,200,dbUser)
+
 }
 func (h *UserHandler)DeleteUser(w http.ResponseWriter , r *http.Request)  {
 	idStr := chi.URLParam(r,"id")
@@ -188,4 +228,68 @@ func (h *UserHandler)Logout(w http.ResponseWriter , r *http.Request)  {
 		return
 	}
 	WriteJSON(w,200,nil)
+}
+func (h *UserHandler)SendOtp(w http.ResponseWriter , r *http.Request)  {
+    idStr := chi.URLParam(r,"id")
+	if idStr == "" {
+		WriteError(w ,400 , "User id is required.")
+		return
+	}
+	id, err :=uuid.Parse(idStr)
+    if err != nil {
+		WriteError(w ,400 , "Couldn't parse user id.")
+		return
+	}
+	dbUser ,err := h.us.GetUserById(r.Context(),id)
+    user_email := dbUser.Email
+	otp := generateSecureOTP(6)
+    err  = h.us.CreateOtp(r.Context() , otp, id)
+	if err != nil {
+		WriteError(w , 400, err.Error())
+		return
+	}
+	SendEmail(user_email , otp)
+}
+func (h *UserHandler)VerifyOtp(w http.ResponseWriter , r *http.Request)  {
+	var req struct {
+		Otp    string `json:"otp"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		WriteJSON(w, http.StatusBadRequest, "Invalid request body.")
+		return
+	}
+
+	idStr := chi.URLParam(r,"id")
+	if idStr == "" {
+		WriteError(w ,400 , "User id is required.")
+		return
+	}
+	id, err :=uuid.Parse(idStr)
+    if err != nil {
+		WriteError(w ,400 , "Couldn't parse user id.")
+		return
+	}
+
+	otp ,err := h.us.GetOtpByUserId(r.Context(),id)
+    if err != nil {
+		WriteError(w,400 , err.Error())
+		return
+	}
+    if time.Now().After(otp.ExpAt) {
+		WriteError(w, 400, "OTP has expired")
+		return
+	}
+
+    isOtpMatched := VerifyOTP(otp.Otp,req.Otp)
+    if !isOtpMatched {
+		WriteError(w,400 , "wrong otp.")
+		return
+	}
+	user , err := h.us.VerifyUser(r.Context() ,id)
+	if err != nil {
+		WriteError(w,400,err.Error())
+		return
+	}
+	_=h.us.DeleteOtp(r.Context() , id)
+	WriteJSON(w,200, user)
 }
