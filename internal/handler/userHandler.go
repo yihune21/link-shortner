@@ -29,11 +29,11 @@ func WriteError(w http.ResponseWriter, status int, message string) {
 	WriteJSON(w, status, map[string]string{"message": message})
 }
 
-func (h *UserHandler)CreateUser(w http.ResponseWriter , r *http.Request)()  {
+func (h *UserHandler)CreateUser(w http.ResponseWriter , r *http.Request)  {
 	var req struct {
 		Name    string `json:"name"`
 		Email  string `json:"email"`
-		Password string `jsom:"password"`
+		Password string `json:"password"` // fixed struct tag
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		WriteJSON(w, http.StatusBadRequest, "Invalid request body.")
@@ -62,8 +62,18 @@ func (h *UserHandler)CreateUser(w http.ResponseWriter , r *http.Request)()  {
 		WriteError(w,400,err.Error())
 		return
 	}
-	WriteJSON(w,200,user)
 
+	accessToken, refreshToken, err := h.us.LoginTokens(r.Context(), user)
+	if err != nil {
+		WriteError(w, 500, err.Error())
+		return
+	}
+
+	WriteJSON(w, 200, map[string]interface{}{
+		"user":          user,
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	})
 }
 func (h *UserHandler)ListUser(w http.ResponseWriter , r *http.Request)  {
 	users,err := h.us.ListUser(r.Context())
@@ -191,25 +201,35 @@ func (h *UserHandler)DeleteUser(w http.ResponseWriter , r *http.Request)  {
 func (h *UserHandler)Login(w http.ResponseWriter , r *http.Request)  {
 	var req struct {
 		Email  string `json:"email"`
-		Password string `jsom:"password"`
+		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		WriteJSON(w, http.StatusBadRequest, "Invalid request body.")
 		return
 	}
     
-	hashedPass , err := HashPassword(req.Password)
-	isMatched := VerifyPassword(req.Password , hashedPass)
-	if !isMatched {
-		WriteError(w,400,err.Error())
-		return
-	}
-	user , err :=h.us.Login(r.Context() ,req.Email , hashedPass)
+	user, err := h.us.GetUserByEmail(r.Context(), req.Email)
 	if err != nil {
-		WriteError(w,400,err.Error())
+		WriteError(w, 400, "invalid email or password")
 		return
 	}
-	WriteJSON(w,200,user)
+
+	if !VerifyPassword(req.Password, user.Password) {
+		WriteError(w, 400, "invalid email or password")
+		return
+	}
+
+	accessToken, refreshToken, err := h.us.LoginTokens(r.Context(), user)
+	if err != nil {
+		WriteError(w, 500, err.Error())
+		return
+	}
+
+	WriteJSON(w, 200, map[string]interface{}{
+		"user":          user,
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	})
 }
 func (h *UserHandler)Logout(w http.ResponseWriter , r *http.Request)  {
 	idStr := chi.URLParam(r,"id")

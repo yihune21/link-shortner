@@ -51,7 +51,8 @@ func main()  {
 	}))
 
 	r.Route("/v1", func(r chi.Router) {
-		
+		r.Post("/refresh-token", authHandler.RefreshToken)
+		r.Get("/{shortId}", linkHandler.GetLinksByShortLink)
 		
 		r.Group(func(r chi.Router) {
 			r.Use(authHandler.MiddlewareAuth)

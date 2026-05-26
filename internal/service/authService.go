@@ -42,3 +42,7 @@ func (s *AuthService)GetUserById(ctx context.Context , id uuid.UUID) (User , err
 
 	return mapUser(user) , nil
 }
+
+func (s *AuthService) GetRefreshToken(ctx context.Context, userID uuid.UUID) (database.RefreshToken, error) {
+	return s.q.GetRefreshToken(ctx, userID)
+}

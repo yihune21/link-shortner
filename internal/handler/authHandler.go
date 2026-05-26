@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 
+	"github.com/yihune21/link-shortner/internal/database"
 	jsonwebtoken "github.com/yihune21/link-shortner/internal/jsonWebToken"
 	"github.com/yihune21/link-shortner/internal/service"
 )
@@ -42,4 +44,42 @@ func (a *AuthHandler) MiddlewareAuth(next http.Handler) http.Handler {
 
         next.ServeHTTP(w, r)
     })
+}
+
+func (a *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		WriteError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	userID, err := jsonwebtoken.VerifyRefreshToken(req.RefreshToken)
+	if err != nil {
+		WriteError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	dbToken, err := a.as.GetRefreshToken(r.Context(), userID)
+	if err != nil || dbToken.Token != req.RefreshToken {
+		WriteError(w, http.StatusUnauthorized, "invalid refresh token")
+		return
+	}
+
+	user, err := a.as.GetUserById(r.Context(), userID)
+	if err != nil {
+		WriteError(w, http.StatusUnauthorized, "user not found")
+		return
+	}
+
+	dbUser := database.User{
+		ID:   user.ID,
+	}
+
+	newAccessToken := jsonwebtoken.GenerateAccessToken(dbUser)
+
+	WriteJSON(w, http.StatusOK, map[string]string{
+		"access_token": newAccessToken,
+	})
 }

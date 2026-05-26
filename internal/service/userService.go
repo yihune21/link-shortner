@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/yihune21/link-shortner/internal/database"
+	jsonwebtoken "github.com/yihune21/link-shortner/internal/jsonWebToken"
 )
 
 type UserService struct {
@@ -173,6 +174,31 @@ func (s *UserService)Login(ctx context.Context,email , password string) (User, e
 	}
 
 	return mapUser(user) , nil
+}
+
+func (s *UserService) LoginTokens(ctx context.Context, u User) (string, string, error) {
+	dbUser := database.User{
+		ID:   u.ID,
+		Name: u.Name,
+	}
+
+	accessToken := jsonwebtoken.GenerateAccessToken(dbUser)
+	refreshToken := jsonwebtoken.GenerateRefreshToken(dbUser)
+
+	_ = s.q.DeleteRefreshToken(ctx, u.ID)
+
+	_, err := s.q.CreateRefreshToken(ctx, database.CreateRefreshTokenParams{
+		ID:        uuid.New(),
+		ExpDate:   time.Now().Add(7 * 24 * time.Hour),
+		Token:     refreshToken,
+		UserID:    u.ID,
+		CreatedAt: time.Now(),
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
 }
 func (s *UserService)Logout(ctx context.Context , id uuid.UUID) error {
     err := s.q.DeleteRefreshToken(ctx , id)

@@ -78,10 +78,10 @@ func (h *LinkHandler)GetLinksByShortLink(w http.ResponseWriter , r *http.Request
 	shortId := chi.URLParam(r , "shortId")
 	link , err := h.ls.GetLinksByShortLink(r.Context(),shortId)
 	if err != nil {
-		WriteError(w , 401 , err.Error())
+		WriteError(w , 404 , "Short link not found")
 		return
 	}
-	WriteJSON(w , 200 , link.OriginalLink)
+	http.Redirect(w, r, link.OriginalLink, http.StatusFound)
 }
 func (h *LinkHandler)GetLinksByUserId(w http.ResponseWriter , r *http.Request)  {
     idStr := chi.URLParam(r,"id")
