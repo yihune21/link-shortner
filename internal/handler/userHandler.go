@@ -39,7 +39,25 @@ func (h *UserHandler)CreateUser(w http.ResponseWriter , r *http.Request)()  {
 		WriteJSON(w, http.StatusBadRequest, "Invalid request body.")
 		return
 	}
-	user , err :=h.us.CreateUser(r.Context() , req.Name , req.Email , req.Password)
+    
+	err := IsValidPassword(req.Password)
+    if err != nil {
+		WriteError(w,302 , err.Error())
+		return
+	}
+    
+	err = IsValidEmail(req.Email)
+    if err != nil {
+		WriteError(w,302 , err.Error())
+		return
+	}
+
+	hashedPass , err := HashPassword(req.Password) 
+	if err != nil {
+		WriteError(w, 302 , err.Error())
+		return
+	}
+	user , err :=h.us.CreateUser(r.Context() , req.Name , req.Email , hashedPass)
 	if err != nil {
 		WriteError(w,400,err.Error())
 		return
@@ -139,7 +157,14 @@ func (h *UserHandler)Login(w http.ResponseWriter , r *http.Request)  {
 		WriteJSON(w, http.StatusBadRequest, "Invalid request body.")
 		return
 	}
-	user , err :=h.us.Login(r.Context() ,req.Email , req.Password)
+    
+	hashedPass , err := HashPassword(req.Password)
+	isMatched := VerifyPassword(req.Password , hashedPass)
+	if !isMatched {
+		WriteError(w,400,err.Error())
+		return
+	}
+	user , err :=h.us.Login(r.Context() ,req.Email , hashedPass)
 	if err != nil {
 		WriteError(w,400,err.Error())
 		return
