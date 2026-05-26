@@ -28,13 +28,24 @@ func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
 func WriteError(w http.ResponseWriter, status int, message string) {
 	WriteJSON(w, status, map[string]string{"message": message})
 }
+type CreateUserRequest struct {
+    Name     string `json:"name"`
+    Email    string `json:"email"`
+    Password string `json:"password"`
+}
 
+// CreateUser creates a new user
+//
+// @Summary Create a user
+// @Description Create a new user account
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body CreateUserRequest true "User data"
+// @Success 201 {object} map[string]interface{}
+// @Router /v1/users [post]
 func (h *UserHandler)CreateUser(w http.ResponseWriter , r *http.Request)  {
-	var req struct {
-		Name    string `json:"name"`
-		Email  string `json:"email"`
-		Password string `json:"password"` // fixed struct tag
-	}
+	var req CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		WriteJSON(w, http.StatusBadRequest, "Invalid request body.")
 		return
@@ -68,13 +79,20 @@ func (h *UserHandler)CreateUser(w http.ResponseWriter , r *http.Request)  {
 		WriteError(w, 500, err.Error())
 		return
 	}
-
+     
 	WriteJSON(w, 200, map[string]interface{}{
 		"user":          user,
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
 	})
 }
+// ListUser gets all users
+// @Summary List all users
+// @Description Returns a list of all users
+// @Tags users
+// @Produce json
+// @Success 200 {array} map[string]interface{}
+// @Router /v1/users [get]
 func (h *UserHandler)ListUser(w http.ResponseWriter , r *http.Request)  {
 	users,err := h.us.ListUser(r.Context())
 	if err != nil {
@@ -83,6 +101,14 @@ func (h *UserHandler)ListUser(w http.ResponseWriter , r *http.Request)  {
 	}
 	WriteJSON(w,200,users)
 }
+// GetUserById gets a user by ID
+// @Summary Get user by ID
+// @Description Returns a user by their ID
+// @Tags users
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} map[string]interface{}
+// @Router /v1/users/{id} [get]
 func (h *UserHandler)GetUserById(w http.ResponseWriter , r *http.Request)  {
 	idStr := chi.URLParam(r,"id")
 	if idStr == "" {
@@ -174,6 +200,14 @@ func (h *UserHandler)UpdateUserPassword(w http.ResponseWriter , r *http.Request)
 	WriteJSON(w,200,dbUser)
 
 }
+// DeleteUser deletes a user
+// @Summary Delete user
+// @Description Deletes a user by their ID
+// @Tags users
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200
+// @Router /v1/users/{id} [delete]
 func (h *UserHandler)DeleteUser(w http.ResponseWriter , r *http.Request)  {
 	idStr := chi.URLParam(r,"id")
 	if idStr == "" {
@@ -198,6 +232,15 @@ func (h *UserHandler)DeleteUser(w http.ResponseWriter , r *http.Request)  {
 
 
 }
+// Login authenticates a user
+// @Summary User login
+// @Description Authenticates user and returns tokens
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param credentials body map[string]string true "Login credentials"
+// @Success 200 {object} map[string]interface{}
+// @Router /v1/users/login [post]
 func (h *UserHandler)Login(w http.ResponseWriter , r *http.Request)  {
 	var req struct {
 		Email  string `json:"email"`
@@ -231,6 +274,15 @@ func (h *UserHandler)Login(w http.ResponseWriter , r *http.Request)  {
 		"refresh_token": refreshToken,
 	})
 }
+// Logout logs out a user
+// @Summary User logout
+// @Description Logs out the current user
+// @Tags users
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200
+// @Security BearerAuth
+// @Router /v1/logout/{id} [post]
 func (h *UserHandler)Logout(w http.ResponseWriter , r *http.Request)  {
 	idStr := chi.URLParam(r,"id")
 	if idStr == "" {

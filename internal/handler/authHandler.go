@@ -46,6 +46,15 @@ func (a *AuthHandler) MiddlewareAuth(next http.Handler) http.Handler {
     })
 }
 
+// RefreshToken refreshes an access token
+// @Summary Refresh access token
+// @Description Gets a new access token using a refresh token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body map[string]string true "Refresh Token"
+// @Success 200 {object} map[string]string
+// @Router /v1/refresh-token [post]
 func (a *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		RefreshToken string `json:"refresh_token"`

@@ -18,6 +18,17 @@ func NewLinkHandler(ls *service.LinkService) *LinkHandler {
 	return &LinkHandler{ls: ls}
 }
 
+// CreateLink creates a new short link
+// @Summary Create a short link
+// @Description Create a short link for the given original URL
+// @Tags links
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param link body map[string]string true "Original Link"
+// @Success 200 {object} map[string]interface{}
+// @Security BearerAuth
+// @Router /v1/link/{id} [post]
 func (h *LinkHandler)CreateLink(w http.ResponseWriter , r *http.Request)()  {
 	var req struct {
 		OriginalLink    string `json:"original_link"`
@@ -74,6 +85,13 @@ func (h *LinkHandler)GetLinkById(w http.ResponseWriter , r *http.Request )  {
 
 	WriteJSON(w , 200 , link)
 }
+// GetLinksByShortLink redirects to the original link
+// @Summary Redirect to original link
+// @Description Redirects to the original URL based on the short ID
+// @Tags links
+// @Param shortId path string true "Short Link ID"
+// @Success 302
+// @Router /v1/{shortId} [get]
 func (h *LinkHandler)GetLinksByShortLink(w http.ResponseWriter , r *http.Request) {
 	shortId := chi.URLParam(r , "shortId")
 	link , err := h.ls.GetLinksByShortLink(r.Context(),shortId)
