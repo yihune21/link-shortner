@@ -15,12 +15,7 @@ import (
 
 
 func main()  {
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	fmt.Printf("Error with loading .env file %v", err)
-	// 	return
-	// }
-	err:= config.LoadEnv()
+	err := config.LoadEnv()
     if err != nil {
 	   log.Fatalln(err)
 	}
@@ -56,8 +51,7 @@ func main()  {
 	}))
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Post("/login", userHandler.Login)
-		r.Post("/user", userHandler.CreateUser)
+		
 		
 		r.Group(func(r chi.Router) {
 			r.Use(authHandler.MiddlewareAuth)
@@ -66,6 +60,8 @@ func main()  {
 		})
 
 		r.Route("/users", func(r chi.Router) {
+			r.Post("/",userHandler.CreateUser)
+			r.Post("/login", userHandler.Login)
 			r.Get("/", userHandler.ListUser)
 			r.Route("/{id}", func(r chi.Router) {
 				r.Get("/", userHandler.GetUserById)
@@ -75,7 +71,6 @@ func main()  {
 	})
     
 	port := config.GetEnv("SERVER_PORT")
-
 	log.Println("Server starting on :" + port)
 	if err := http.ListenAndServe(":"+port, r); err != nil {
 		log.Fatal(err)
